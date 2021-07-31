@@ -1,0 +1,13 @@
+version: "3.7"
+
+services:
+  postgres:
+    image: postgres:alpine
+    command:
+      ["postgres", "-c", "log_statement=all", "-c", "log_destination=stderr"]
+    ports:
+      - ${DB_PORT}:5432
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
