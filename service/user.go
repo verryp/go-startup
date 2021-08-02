@@ -10,6 +10,7 @@ import (
 type UserService interface {
 	RegisterUser(input input.UserRegisterInput) (model.User, error)
 	IsEmailAvailable(input input.EmailRequest) (bool, error)
+	SaveAvatar(ID int, fileLocation string) (model.User, error)
 }
 
 type userService struct {
@@ -56,4 +57,19 @@ func (s *userService) IsEmailAvailable(req input.EmailRequest) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func (s *userService) SaveAvatar(ID int, fileLocation string) (user model.User, err error) {
+	user, err = s.repository.FindByID(ID)
+	if err != nil {
+		return
+	}
+
+	user.AvatarFileName = fileLocation
+	updatedUser, err := s.repository.Update(user)
+	if err != nil {
+		return updatedUser, nil
+	}
+
+	return updatedUser, nil
 }
