@@ -5,9 +5,13 @@ services:
     image: postgres:alpine
     command:
       ["postgres", "-c", "log_statement=all", "-c", "log_destination=stderr"]
+    volumes:
+    - crowdfund-data:/var/lib/postgresql/data/
     ports:
       - ${DB_PORT}:5432
     environment:
       - POSTGRES_USER=${DB_USERNAME}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
+volumes:
+  crowdfund-data:
