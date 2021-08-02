@@ -33,6 +33,7 @@ func main() {
 
 	api := router.Group("/api/v1")
 	api.POST("/users", userHandler.RegisterUser)
+	api.POST("/users/email/check", userHandler.CheckEmailAvailability)
 	api.POST("/sessions", authHandler.Login)
 
 	router.Run()

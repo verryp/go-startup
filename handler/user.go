@@ -39,9 +39,44 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 	}
 
 	// TODO: generate token using jwt
-	
+
 	formatUser := formatter.FormatUser(newUser, "lalala")
 	response := helper.ApiResponse("Account has been registered", http.StatusOK, "success", formatUser)
 	c.JSON(http.StatusOK, response)
-	
+
+}
+
+func (h *userHandler) CheckEmailAvailability(c *gin.Context) {
+	var request input.EmailRequest
+
+	err := c.ShouldBindJSON(&request)
+	if err != nil {
+		errors := helper.FormatValidationErrorResponse(err)
+		errMsg := gin.H{"errors": errors}
+
+		response := helper.ApiResponse("Check email failed", http.StatusNotAcceptable, "error", errMsg)
+		c.JSON(http.StatusNotAcceptable, response)
+		return
+	}
+
+	isAvailable, err := h.service.IsEmailAvailable(request)
+	if err != nil {
+		errMsg := gin.H{"errors": err.Error()}
+
+		response := helper.ApiResponse("Check email failed", http.StatusNotAcceptable, "error", errMsg)
+		c.JSON(http.StatusNotAcceptable, response)
+		return
+	}
+
+	data := gin.H{
+		"is_available": isAvailable,
+	}
+
+	metaMsg := "Email has been registered"
+	if isAvailable {
+		metaMsg = "Email is available"
+	}
+
+	response := helper.ApiResponse(metaMsg, http.StatusOK, "success", data)
+	c.JSON(http.StatusOK, response)
 }
