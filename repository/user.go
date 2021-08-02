@@ -7,6 +7,7 @@ import (
 
 type UserRepo interface {
 	Store(user model.User) (model.User, error)
+	FindByEmail(email string) (model.User, error)
 }
 
 type userRepo struct {
@@ -25,4 +26,14 @@ func (r *userRepo) Store(user model.User) (model.User, error) {
 	}
 
 	return user, nil
+}
+
+func (r *userRepo) FindByEmail(email string) (user model.User, err error) {
+	user = model.User{}
+	err = r.db.Where("email = ?", email).Find(&user).Error
+	if err != nil {
+		return
+	}
+
+	return
 }

@@ -20,18 +20,20 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	fmt.Println("Database connected...") 
-
+	fmt.Println("Database connected...")
 
 	userRepo := repository.NewUserRepository(db)
 	userService := service.NewUserService(userRepo)
-	
+	authService := service.NewAuthService(userRepo)
+
 	userHandler := handler.NewUserHandler(userService)
+	authHandler := handler.NewAuthHandler(authService)
 
 	router := gin.Default()
 
 	api := router.Group("/api/v1")
 	api.POST("/users", userHandler.RegisterUser)
+	api.POST("/sessions", authHandler.Login)
 
 	router.Run()
 
