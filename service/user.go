@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+
 	"github.com/verryp/go-startup/app/input"
 	"github.com/verryp/go-startup/app/model"
 	"github.com/verryp/go-startup/repository"
@@ -9,6 +11,7 @@ import (
 
 type UserService interface {
 	RegisterUser(input input.UserRegisterInput) (model.User, error)
+	Login(input input.LoginRequest) (model.User, error)
 	IsEmailAvailable(input input.EmailRequest) (bool, error)
 	SaveAvatar(ID int, fileLocation string) (model.User, error)
 }
@@ -72,4 +75,26 @@ func (s *userService) SaveAvatar(ID int, fileLocation string) (user model.User, 
 	}
 
 	return updatedUser, nil
+}
+
+func (s *userService) Login(input input.LoginRequest) (user model.User, err error) {
+	email := input.Email
+	password := input.Password
+
+	user, err = s.repository.FindByEmail(email)
+	if err != nil {
+		return
+	}
+
+	if user.ID == 0 {
+		err = errors.New("No user found on that email")
+		return
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+	if err != nil {
+		return
+	}
+
+	return
 }

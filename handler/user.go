@@ -12,11 +12,12 @@ import (
 )
 
 type userHandler struct {
-	service service.UserService
+	service     service.UserService
+	authService service.AuthService
 }
 
-func NewUserHandler(s service.UserService) *userHandler {
-	return &userHandler{s}
+func NewUserHandler(s service.UserService, authService service.AuthService) *userHandler {
+	return &userHandler{s, authService}
 }
 
 func (h *userHandler) RegisterUser(c *gin.Context) {
@@ -39,9 +40,14 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	// TODO: generate token using jwt
+	token, err := h.authService.GenerateToken(newUser.ID)
+	if err != nil {
+		response := helper.ApiResponse("Register account failed", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
 
-	formatUser := formatter.FormatUser(newUser, "lalala")
+	formatUser := formatter.FormatUser(newUser, token)
 	response := helper.ApiResponse("Account has been registered", http.StatusOK, "success", formatUser)
 	c.JSON(http.StatusOK, response)
 
@@ -114,6 +120,38 @@ func (h *userHandler) UploadAvatar(c *gin.Context) {
 	response := helper.ApiResponse("Avatar successfully uploaded", http.StatusOK, "success", data)
 
 	c.JSON(http.StatusOK, response)
-	return
+}
 
+func (h *userHandler) Login(c *gin.Context) {
+	var input input.LoginRequest
+
+	err := c.ShouldBindJSON(&input)
+	if err != nil {
+		errors := helper.FormatValidationErrorResponse(err)
+		errMsg := gin.H{"errors": errors}
+
+		response := helper.ApiResponse("Login failed", http.StatusUnauthorized, "error", errMsg)
+		c.JSON(http.StatusUnauthorized, response)
+		return
+	}
+
+	userLogged, err := h.service.Login(input)
+	if err != nil {
+		errMsg := gin.H{"errors": err.Error()}
+
+		response := helper.ApiResponse("Login failed", http.StatusUnauthorized, "error", errMsg)
+		c.JSON(http.StatusUnauthorized, response)
+		return
+	}
+
+	token, err := h.authService.GenerateToken(userLogged.ID)
+	if err != nil {
+		response := helper.ApiResponse("Register account failed", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	formatUser := formatter.FormatUser(userLogged, token)
+	response := helper.ApiResponse("Successfully loggedin", http.StatusOK, "success", formatUser)
+	c.JSON(http.StatusOK, response)
 }

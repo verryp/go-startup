@@ -10,3 +10,8 @@ type UserRegisterInput struct {
 type EmailRequest struct {
 	Email string `json:"email" binding:"required,email"`
 }
+
+type LoginRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
+}
